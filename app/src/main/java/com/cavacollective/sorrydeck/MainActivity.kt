@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,14 +30,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +54,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,7 +62,6 @@ import androidx.compose.ui.unit.sp
 
 // --- Sorry!-inspired palette (no trademarks) ---
 private val FeltGreen = Color(0xFF1B5E20)
-private val FeltGreenDark = Color(0xFFE8F5E9)  // light tint for top stripe
 private val CardCream = Color(0xFFFFFDF6)
 private val CardInk = Color(0xFF1C1C1C)
 private val SorryRed = Color(0xFFC62828)
@@ -66,6 +69,9 @@ private val AccentBlue = Color(0xFF1565C0)
 private val AccentYellow = Color(0xFFF9A825)
 private val CardBackRed = Color(0xFFB71C1C)
 private val CardBackTrim = Color(0xFFFFD54F)
+
+// Flip animation length (ms)
+private const val FLIP_DURATION_MS = 900
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,16 +102,16 @@ fun DeckScreen() {
         onDispose { soundManager.release() }
     }
 
-    // Deck + cursor. Cursor = number of cards revealed so far (0..45).
-    // 0 means "no card drawn yet, deck is full".
     var deck by remember { mutableStateOf(Deck.newShuffled()) }
     var revealedCount by rememberSaveable { mutableIntStateOf(0) }
-    // viewIndex = which revealed card the user is currently looking at (0..revealedCount-1)
     var viewIndex by rememberSaveable { mutableIntStateOf(-1) }
+    var showReshuffleConfirm by remember { mutableStateOf(false) }
 
     val totalCards = deck.size
     val deckEmpty = revealedCount >= totalCards
-    val viewingHistory = viewIndex in 0 until (revealedCount - 1)
+    val viewingHistory by remember {
+        derivedStateOf { viewIndex in 0 until (revealedCount - 1) }
+    }
     val currentCard: Card? = if (viewIndex in deck.indices) deck[viewIndex] else null
 
     fun drawNext() {
@@ -113,7 +119,7 @@ fun DeckScreen() {
         revealedCount += 1
         viewIndex = revealedCount - 1
         val drawn = deck[viewIndex]
-        if (drawn.isSorry) soundManager.playSorry() else soundManager.playFlip()
+        soundManager.playForCard(drawn)
     }
 
     fun reshuffle() {
@@ -143,25 +149,48 @@ fun DeckScreen() {
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        Text(
-            text = "SORRY DECK",
-            color = CardBackTrim,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 4.sp
-        )
-        Spacer(Modifier.height(4.dp))
-        val counterText = when {
-            revealedCount == 0 -> "$totalCards cards · tap to draw"
-            viewingHistory -> "Reviewing card ${viewIndex + 1} of $revealedCount drawn"
-            else -> "Card $revealedCount of $totalCards"
+        // Header row: title centered, reshuffle button top-right
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "SORRY DECK",
+                    color = CardBackTrim,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 4.sp
+                )
+                Spacer(Modifier.height(4.dp))
+                val counterText = when {
+                    revealedCount == 0 -> "$totalCards cards · tap to draw"
+                    viewingHistory -> "Reviewing card ${viewIndex + 1} of $revealedCount drawn"
+                    else -> "Card $revealedCount of $totalCards"
+                }
+                Text(
+                    text = counterText,
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 14.sp
+                )
+            }
+
+            // Mid-game reshuffle icon (top-right). Hidden when deck is empty
+            // because the big SHUFFLE button below takes over.
+            if (!deckEmpty && revealedCount > 0) {
+                IconButton(
+                    onClick = { showReshuffleConfirm = true },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = "Reshuffle deck",
+                        tint = CardBackTrim,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
         }
-        Text(
-            text = counterText,
-            color = Color.White.copy(alpha = 0.85f),
-            fontSize = 14.sp
-        )
 
         Spacer(Modifier.height(20.dp))
 
@@ -175,7 +204,6 @@ fun DeckScreen() {
             FlipCard(
                 card = currentCard,
                 deckEmpty = deckEmpty,
-                showingBack = currentCard == null && !deckEmpty,
                 onTap = {
                     if (!deckEmpty && !viewingHistory) drawNext()
                 }
@@ -184,7 +212,7 @@ fun DeckScreen() {
 
         Spacer(Modifier.height(20.dp))
 
-        // Controls row: back, shuffle (when empty), forward
+        // Bottom controls: back / center action / forward
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -235,41 +263,79 @@ fun DeckScreen() {
             }
         }
     }
+
+    // Reshuffle confirmation dialog
+    if (showReshuffleConfirm) {
+        AlertDialog(
+            onDismissRequest = { showReshuffleConfirm = false },
+            title = { Text("Reshuffle deck?") },
+            text = {
+                Text(
+                    "This will shuffle all 45 cards back together and reset the count. " +
+                            "You'll lose your current draw history."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showReshuffleConfirm = false
+                        reshuffle()
+                    }
+                ) {
+                    Text("RESHUFFLE", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReshuffleConfirm = false }) {
+                    Text("CANCEL")
+                }
+            }
+        )
+    }
 }
 
+/**
+ * Animates the card flipping in from -90° to 0° on Y-axis whenever the
+ * displayed card changes. We swap which face is drawn at the midpoint so
+ * the back is visible during the first half and the front during the second.
+ */
 @Composable
 fun FlipCard(
     card: Card?,
     deckEmpty: Boolean,
-    showingBack: Boolean,
     onTap: () -> Unit
 ) {
-    // We animate a rotation value that changes whenever the card identity changes.
-    // Each new card flips in from 90° to 0°.
-    val flipKey = card?.hashCode() ?: if (deckEmpty) -1 else 0
-    var lastKey by remember { mutableIntStateOf(Int.MIN_VALUE) }
-    var animTarget by remember { mutableStateOf(0f) }
-    if (lastKey != flipKey) {
-        lastKey = flipKey
-        animTarget = 0f
+    // A monotonically-increasing key triggers a new flip animation each time
+    // the displayed card changes.
+    val flipKey = remember(card, deckEmpty) {
+        when {
+            deckEmpty -> Int.MAX_VALUE
+            card == null -> -1
+            else -> System.nanoTime().toInt()
+        }
     }
-    // Trick: start from 90, animate to 0 by toggling target via key
-    val rotation by animateFloatAsState(
+
+    // Drive a 0f -> 1f progress for each flip
+    var animTarget by remember { mutableStateOf(0f) }
+    LaunchedEffect(flipKey) {
+        animTarget = 0f       // reset
+        animTarget = 1f       // animate to 1
+    }
+    val progress by animateFloatAsState(
         targetValue = animTarget,
-        animationSpec = tween(durationMillis = 350),
-        label = "flip"
+        animationSpec = tween(durationMillis = FLIP_DURATION_MS, easing = FastOutSlowInEasing),
+        label = "flipProgress"
     )
-    // Kick off the animation when key changes by briefly setting target to 90 and back
-    // (we use a remembered "initial" state and let it slide from -90 to 0)
-    val startRotation by remember(flipKey) { mutableStateOf(-90f) }
-    val effectiveRotation = startRotation + (rotation - startRotation) // animates from -90 to 0
+
+    // Map progress to rotation: -90° → 0°
+    val rotation = -90f + (90f * progress)
 
     Box(
         modifier = Modifier
             .fillMaxWidth(0.82f)
             .aspectRatio(0.68f)
             .graphicsLayer {
-                rotationY = effectiveRotation
+                rotationY = rotation
                 cameraDistance = 12 * density
             }
             .shadow(elevation = 12.dp, shape = RoundedCornerShape(20.dp))
@@ -278,7 +344,7 @@ fun FlipCard(
     ) {
         when {
             deckEmpty -> EmptyDeckFace()
-            card == null || showingBack -> CardBackFace()
+            card == null -> CardBackFace()
             else -> CardFrontFace(card)
         }
     }
@@ -356,7 +422,6 @@ private fun CardFrontFace(card: Card) {
             .border(width = 4.dp, color = accent, shape = RoundedCornerShape(20.dp))
             .padding(20.dp)
     ) {
-        // Top-left mini number
         Text(
             text = card.label,
             color = ink,
@@ -364,7 +429,6 @@ private fun CardFrontFace(card: Card) {
             fontWeight = FontWeight.Black,
             modifier = Modifier.align(Alignment.TopStart)
         )
-        // Bottom-right mini number (rotated 180 visually via duplicate)
         Text(
             text = card.label,
             color = ink,
@@ -373,7 +437,6 @@ private fun CardFrontFace(card: Card) {
             modifier = Modifier.align(Alignment.BottomEnd)
         )
 
-        // Center: big label + title + rule
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
