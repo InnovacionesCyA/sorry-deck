@@ -6,18 +6,22 @@
 <title>Sorry Deck — Download</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; background:#1B5E20; color:#fff; margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .card { background:#FFFDF6; color:#1C1C1C; border-radius:20px; border:4px solid #C62828; padding:32px; max-width:420px; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+  .card { background:#FFFDF6; color:#1C1C1C; border-radius:20px; border:4px solid #C62828; padding:32px; max-width:440px; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,0.4); }
   h1 { margin:0 0 8px; font-size:28px; color:#C62828; letter-spacing:3px; }
+  .version { background:#FFD54F; color:#1C1C1C; display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; letter-spacing:1px; margin:8px 0; }
   p { margin:8px 0; line-height:1.5; }
   .btn { display:inline-block; margin-top:20px; padding:18px 28px; background:#C62828; color:#fff; text-decoration:none; border-radius:12px; font-weight:bold; font-size:18px; letter-spacing:2px; }
   .meta { color:#666; font-size:13px; margin-top:16px; }
   ol { text-align:left; }
+  ul.changes { text-align:left; font-size:14px; background:#FFF8E1; padding:14px 18px 14px 30px; border-radius:10px; margin-top:16px; }
+  ul.changes li { margin:4px 0; }
 </style>
 </head>
 <body>
   <div class="card">
     <h1>SORRY DECK</h1>
-    <p>Android APK · v1.0.0 · 15 MB</p>
+    <div class="version">v1.1.0</div>
+    <p>Android APK · 16 MB</p>
     <a class="btn" href="sorry-deck-v1.apk" download>DOWNLOAD APK</a>
     <p class="meta">After download:<br>tap the file → allow install from this source → Install</p>
     <ol>
@@ -27,6 +31,14 @@
       <li>Allow install from unknown sources if Android asks</li>
       <li>Tap Install</li>
     </ol>
+    <ul class="changes">
+      <li>Slower, clearly-visible 900ms flip animation</li>
+      <li>Swoosh flip sound (replaces paper snap)</li>
+      <li>Card 2 plays an arcade power-up chime (draw again)</li>
+      <li>Card 4 plays a descending "whomp" (going backward)</li>
+      <li>Sorry! card plays a low whomp-whomp</li>
+      <li>Mid-game reshuffle button with confirmation</li>
+    </ul>
   </div>
 </body>
 </html>
