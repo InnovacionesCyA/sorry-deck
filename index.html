@@ -6,7 +6,7 @@
 <title>Sorry Deck — Download</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; background:#1B5E20; color:#fff; margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .card { background:#FFFDF6; color:#1C1C1C; border-radius:20px; border:4px solid #C62828; padding:32px; max-width:440px; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+  .card { background:#FFFDF6; color:#1C1C1C; border-radius:20px; border:4px solid #C62828; padding:32px; max-width:460px; text-align:center; box-shadow:0 12px 40px rgba(0,0,0,0.4); }
   h1 { margin:0 0 8px; font-size:28px; color:#C62828; letter-spacing:3px; }
   .version { background:#FFD54F; color:#1C1C1C; display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; letter-spacing:1px; margin:8px 0; }
   p { margin:8px 0; line-height:1.5; }
@@ -16,12 +16,13 @@
   ol { text-align:left; }
   ul.changes { text-align:left; font-size:14px; background:#FFF8E1; padding:14px 18px 14px 30px; border-radius:10px; margin-top:16px; }
   ul.changes li { margin:4px 0; }
+  .credits { color:#888; font-size:11px; margin-top:14px; line-height:1.4; }
 </style>
 </head>
 <body>
   <div class="card">
     <h1>SORRY DECK</h1>
-    <div class="version">v1.2.0</div>
+    <div class="version">v1.3.0</div>
     <p>Android APK · 16 MB</p>
     <a class="btn" href="sorry-deck-v1.apk" download>DOWNLOAD APK</a>
     <div class="note">
@@ -37,10 +38,14 @@
       <li>Tap Install</li>
     </ol>
     <ul class="changes">
-      <li>Softer page-turn flip sound (Kindle-style swish)</li>
-      <li>Card-specific sounds (2, 4, Sorry) now play <em>after</em> the flip (450ms delay)</li>
-      <li>Tap the empty-deck card to reshuffle — no bottom button</li>
+      <li>Real card-flip sound (replaces the synthesized swish)</li>
+      <li>New chime on card 2 (draw again)</li>
+      <li>New slide-whistle on card 4 (going backward)</li>
+      <li>New whispered "sorry" voice on Sorry! cards</li>
+      <li>New bonus chime on card 11 (move 11 or switch)</li>
+      <li>All sounds volume-normalized so nothing is too loud or quiet</li>
     </ul>
+    <p class="credits">Audio: Universfield &amp; Freesound community (free for personal use)</p>
   </div>
 </body>
 </html>
