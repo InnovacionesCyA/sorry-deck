@@ -30,6 +30,7 @@ class SoundManager(context: Context) {
     private val sorryId: Int = soundPool.load(context, R.raw.sorry_sting, 1)
     private val powerUpId: Int = soundPool.load(context, R.raw.power_up, 1)
     private val backwardId: Int = soundPool.load(context, R.raw.backward, 1)
+    private val bonusId: Int = soundPool.load(context, R.raw.bonus, 1)
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -53,6 +54,10 @@ class SoundManager(context: Context) {
         soundPool.play(backwardId, 1f, 1f, 1, 0, 1f)
     }
 
+    private fun playBonus() {
+        soundPool.play(bonusId, 1f, 1f, 1, 0, 1f)
+    }
+
     /**
      * Plays the page-turn immediately, then schedules the card-specific
      * accent sound after [accentDelayMs] for Sorry!, 2, and 4 cards.
@@ -63,6 +68,7 @@ class SoundManager(context: Context) {
             card.isSorry -> ::playSorry
             card.label == "2" -> ::playPowerUp
             card.label == "4" -> ::playBackward
+            card.label == "11" -> ::playBonus
             else -> null
         }
         if (accent != null) {
