@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,8 +30,6 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -205,14 +202,17 @@ fun DeckScreen() {
                 card = currentCard,
                 deckEmpty = deckEmpty,
                 onTap = {
-                    if (!deckEmpty && !viewingHistory) drawNext()
+                    when {
+                        deckEmpty -> reshuffle()
+                        !viewingHistory -> drawNext()
+                    }
                 }
             )
         }
 
         Spacer(Modifier.height(20.dp))
 
-        // Bottom controls: back / center action / forward
+        // Bottom controls: back / hint text / forward
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -230,25 +230,15 @@ fun DeckScreen() {
                 )
             }
 
-            if (deckEmpty) {
-                Button(
-                    onClick = { reshuffle() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = CardBackTrim,
-                        contentColor = CardInk
-                    )
-                ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("SHUFFLE", fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-                }
-            } else {
-                Text(
-                    text = if (viewingHistory) "Tap → to return" else "Tap card to draw",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 13.sp
-                )
-            }
+            Text(
+                text = when {
+                    deckEmpty -> "Tap card to reshuffle"
+                    viewingHistory -> "Tap → to return"
+                    else -> "Tap card to draw"
+                },
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 13.sp
+            )
 
             IconButton(
                 onClick = { goForward() },
@@ -339,7 +329,7 @@ fun FlipCard(
                 cameraDistance = 12 * density
             }
             .shadow(elevation = 12.dp, shape = RoundedCornerShape(20.dp))
-            .clickable(enabled = !deckEmpty) { onTap() },
+            .clickable { onTap() },
         contentAlignment = Alignment.Center
     ) {
         when {
@@ -392,7 +382,7 @@ private fun EmptyDeckFace() {
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "All 45 cards drawn.\nTap SHUFFLE to start again.",
+                text = "All 45 cards drawn.\nTap card to reshuffle.",
                 color = CardInk.copy(alpha = 0.7f),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center

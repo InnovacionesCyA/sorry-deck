@@ -3,8 +3,17 @@ package com.cavacollective.sorrydeck
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
+import android.os.Handler
+import android.os.Looper
 
-/** Loads and plays the short sound effects with low latency. */
+/**
+ * Loads and plays the short sound effects with low latency.
+ *
+ * Audio timing:
+ * - Flip sound plays immediately on every draw and on history navigation.
+ * - Card-specific sounds (2, 4, Sorry!) play AFTER a short delay so they
+ *   layer in sequence rather than on top of the page-turn.
+ */
 class SoundManager(context: Context) {
 
     private val soundPool: SoundPool = SoundPool.Builder()
@@ -22,41 +31,47 @@ class SoundManager(context: Context) {
     private val powerUpId: Int = soundPool.load(context, R.raw.power_up, 1)
     private val backwardId: Int = soundPool.load(context, R.raw.backward, 1)
 
-    /** Default card flip swoosh. */
+    private val handler = Handler(Looper.getMainLooper())
+
+    /** Delay between the page-turn and the card-specific sound, in milliseconds. */
+    private val accentDelayMs = 450L
+
+    /** Page-turn swish (every draw and history step). */
     fun playFlip() {
         soundPool.play(flipId, 1f, 1f, 1, 0, 1f)
     }
 
-    /** Sorry! card whomp-whomp. */
-    fun playSorry() {
+    private fun playSorry() {
         soundPool.play(sorryId, 1f, 1f, 1, 0, 1f)
     }
 
-    /** "Draw again" arcade chime for card 2. */
-    fun playPowerUp() {
+    private fun playPowerUp() {
         soundPool.play(powerUpId, 1f, 1f, 1, 0, 1f)
     }
 
-    /** Descending tones for card 4 (going backward). */
-    fun playBackward() {
+    private fun playBackward() {
         soundPool.play(backwardId, 1f, 1f, 1, 0, 1f)
     }
 
     /**
-     * Picks the appropriate sound for the drawn card. Sorry! / 2 / 4 get their own
-     * effects layered after the flip swoosh; all other cards get just the swoosh.
+     * Plays the page-turn immediately, then schedules the card-specific
+     * accent sound after [accentDelayMs] for Sorry!, 2, and 4 cards.
      */
     fun playForCard(card: Card) {
-        // Always play the flip swoosh on every draw
         playFlip()
-        when {
-            card.isSorry -> playSorry()
-            card.label == "2" -> playPowerUp()
-            card.label == "4" -> playBackward()
+        val accent: (() -> Unit)? = when {
+            card.isSorry -> ::playSorry
+            card.label == "2" -> ::playPowerUp
+            card.label == "4" -> ::playBackward
+            else -> null
+        }
+        if (accent != null) {
+            handler.postDelayed({ accent.invoke() }, accentDelayMs)
         }
     }
 
     fun release() {
+        handler.removeCallbacksAndMessages(null)
         soundPool.release()
     }
 }
