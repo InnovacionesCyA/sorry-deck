@@ -11,6 +11,7 @@
   .version { background:#FFD54F; color:#1C1C1C; display:inline-block; padding:4px 10px; border-radius:6px; font-size:12px; font-weight:bold; letter-spacing:1px; margin:8px 0; }
   p { margin:8px 0; line-height:1.5; }
   .btn { display:inline-block; margin-top:20px; padding:18px 28px; background:#C62828; color:#fff; text-decoration:none; border-radius:12px; font-weight:bold; font-size:18px; letter-spacing:2px; }
+  .note { background:#FFEBEE; color:#7A1212; border:1px solid #C62828; border-radius:10px; padding:10px 14px; font-size:13px; margin-top:14px; text-align:left; }
   .meta { color:#666; font-size:13px; margin-top:16px; }
   ol { text-align:left; }
   ul.changes { text-align:left; font-size:14px; background:#FFF8E1; padding:14px 18px 14px 30px; border-radius:10px; margin-top:16px; }
@@ -20,9 +21,13 @@
 <body>
   <div class="card">
     <h1>SORRY DECK</h1>
-    <div class="version">v1.1.0</div>
+    <div class="version">v1.2.0</div>
     <p>Android APK · 16 MB</p>
     <a class="btn" href="sorry-deck-v1.apk" download>DOWNLOAD APK</a>
+    <div class="note">
+      <strong>Updating?</strong> Uninstall the previous version first
+      (long-press the icon → Uninstall), then install this build.
+    </div>
     <p class="meta">After download:<br>tap the file → allow install from this source → Install</p>
     <ol>
       <li>Tap DOWNLOAD APK above</li>
@@ -32,12 +37,9 @@
       <li>Tap Install</li>
     </ol>
     <ul class="changes">
-      <li>Slower, clearly-visible 900ms flip animation</li>
-      <li>Swoosh flip sound (replaces paper snap)</li>
-      <li>Card 2 plays an arcade power-up chime (draw again)</li>
-      <li>Card 4 plays a descending "whomp" (going backward)</li>
-      <li>Sorry! card plays a low whomp-whomp</li>
-      <li>Mid-game reshuffle button with confirmation</li>
+      <li>Softer page-turn flip sound (Kindle-style swish)</li>
+      <li>Card-specific sounds (2, 4, Sorry) now play <em>after</em> the flip (450ms delay)</li>
+      <li>Tap the empty-deck card to reshuffle — no bottom button</li>
     </ul>
   </div>
 </body>
